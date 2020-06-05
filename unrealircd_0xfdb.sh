@@ -1,4 +1,5 @@
 #!/bin/bash
+#version 0.2
 #written by f0ur0ne
 
 function prepareircdsource {
@@ -27,16 +28,52 @@ function patch_fakelag {
 	 /* The default value for class::sendq */
 	 #define DEFAULT_SENDQ	3000000
 	-
-	" > fakelag.patch
-	patch ./include/config.h ./fakelag.patch
-	pwd
-	echo $unrealsource_dir
-	echo $unrealbinary_dir
+	" > $unrealsource_dir/fakelag.patch
+	patch $unrealsource_dir/include/config.h $unrealsource_dir/fakelag.patch
 }
 
 function check_deps {
-	echo Checking if development meta and LibreSSL dev packages are installed...
-	sudo xbps-install -S base-devel libressl-devel
+	libssl_true=$(ldconfig -p | grep libssl3)
+	c-ares_true=$(ldconfig -p | grep libcares)
+	nsl_true=$(ldconfig -p | grep libnsl)
+	pcre2_true=$(ldconfig -p | grep pcre2)
+	distro=$(cat /etc/*-release | head -n1)
+	if [ -z $libssl_true ] || [ -z $c-ares_true ] || [ -z $nsl_true ]; then
+		echo "You are missing a build dependency..."
+		echo "Checking distro..."
+		if [ "$distro" = 'NAME="void"' ]; then
+			echo "Void Linux - Checking with xbps"
+			echo "Ensuring base-devel and LibreSSL dev packages are installed..."
+			sudo xbps-install -S base-devel libressl-devel
+		fi
+		if [ "$distro" = 'NAME="Arch Linux"' ]; then
+			echo "Arch Linux - Checking with pacman"
+			echo "Ensuring base-devel and OpenSSL dev packages are installed..."
+			echo Checking if base-devel meta and OpenSSL packages are installed...
+			sudo pacman -S base-devel openssl
+		fi
+		if [ "$distro" = 'NAME="Linux Mint"' ] || [ "$distro" = 'PRETTY_NAME="Debian GNU/Linux 10 (*)"' ]; then
+			echo "Debian based Linux - Checking with apt"
+			echo "Ensuring build-essential and OpenSSL packages are installed..."
+			sudo apt install build-essential openssl
+		fi
+		if [ "$distro" = 'NAME="void"' ] || [ "$distro" = 'NAME="Arch Linux"' ] || [ "$distro" = 'NAME="Linux Mint"' ] || [ "$distro" = 'PRETTY_NAME="Debian GNU/Linux 10 (*)"' ]; then
+			echo "You are running an unsupported distro for the automatic installation of build dependencies..."
+			echo "Make sure you have the following packages installed:"
+			echo " OpenSSL or LibreSSL development package"
+			echo " c-ares"
+			echo " nsl"
+			echo " pcre2"
+			echo ""
+			echo "Manually verify all required dependencies are met then type build and hit enter..."
+			read manually_checked
+			if [ "$manually_checked" = "build" ]; then
+				echo "Manually verified dependencies, Proceeding..."
+			fi
+		fi
+	else
+		echo "All build dependencies are satisfied..."
+	fi
 }
 
 function build_unreal {
