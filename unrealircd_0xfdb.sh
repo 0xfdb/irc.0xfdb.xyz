@@ -1,5 +1,5 @@
 #!/bin/bash
-#version 0.2
+#version 0.3
 #written by f0ur0ne
 
 function prepareircdsource {
@@ -48,8 +48,7 @@ function check_deps {
 		fi
 		if [ "$distro" = 'NAME="Arch Linux"' ]; then
 			echo "Arch Linux - Checking with pacman"
-			echo "Ensuring base-devel and OpenSSL dev packages are installed..."
-			echo Checking if base-devel meta and OpenSSL packages are installed...
+			echo "Ensuring base-devel meta and OpenSSL packages are installed..."
 			sudo pacman -S base-devel openssl
 		fi
 		if [ "$distro" = 'NAME="Linux Mint"' ] || [ "$distro" = 'PRETTY_NAME="Debian GNU/Linux 10 (*)"' ]; then
