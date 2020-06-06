@@ -65,6 +65,7 @@ x509_extensions = cert_type
 [ req_dn ]
 countryName = Country Name
 countryName_default             = US
+countryName_value               = US
 countryName_min                 = 2
 countryName_max                 = 2
 
