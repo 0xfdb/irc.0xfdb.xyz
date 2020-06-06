@@ -1,6 +1,6 @@
 #!/bin/bash
 #written by f0ur0ne
-script_version="0.6.1"
+script_version="0.6.2"
 base_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 function prepareircdsource {
@@ -551,7 +551,7 @@ function usage {
 		echo ""
 		echo " Usage: $ unrealircd_0xfdb.sh [option1] [option2] [...]"
 		echo " Options:"
-		echo "	-n --newconf	Creates a new config from template (Useful for new servers)"
+		echo "	-n --newconf				Creates a new config from template (Useful for new servers)"
 		echo "	-f --file=path/to/file		Path to answer file (Disables most interaction, file must be in current dir)"
 		echo "	-i --interactive			Forces interaction (This is how the script runs without options passed)"
 		echo "	--nosudo				Skips all dependency checks"
