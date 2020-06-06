@@ -1,6 +1,6 @@
 #!/bin/bash
 #written by f0ur0ne
-script_version="0.6.5"
+script_version="0.6.7"
 base_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source_dir=$(ls $base_dir | grep unrealircd- | sed '/gz$/d')
 unrealsource_dir="$base_dir/$source_dir"
@@ -86,7 +86,13 @@ function check_deps {
 
 function build_unreal {
 	echo "Starting UnrealIRCd config..."
-	$unrealsource_dir/Config
+	if [ "$script_interactive" == "y" ]; then
+		echo "Going interactive..."
+		$unrealsource_dir/Config
+	else
+		echo "Running with minimal questions..."
+		$unrealsource_dir/Config -nointro -quick
+	fi
 	echo "Config done, lets compile and install..."
 	make
 	make install
