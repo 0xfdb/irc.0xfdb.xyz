@@ -1,6 +1,6 @@
 #!/bin/bash
 #written by f0ur0ne
-script_version="0.4"
+script_version="0.5"
 base_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 function prepareircdsource {
@@ -537,14 +537,17 @@ function main {
 			freshconf
 				if [ "$script_interactive" == "y" ]; then
 					getconf_info
-					printconf_info
-				else
-					source "$file_path"
-					printconf_info
 				fi
+				if [ "$file_given" == "y" ]; then
+					source "$file_path"
+				fi
+			printconf_info
 			writeconf_patch
 		else
 			echo "Keeping old conf..."
+			if [ "$file_given" == "y" ]; then
+				echo "Unneeded option --newconf was passed... ignored."
+			fi
 		fi
 		start_unreal & end_msg
 		exit
@@ -585,6 +588,7 @@ else
 					echo "Refer to --help for info on usage."
 					exit
 				else
+					file_given="y"
 					file_path="$base_dir/$file_name"
 				fi
 		fi
