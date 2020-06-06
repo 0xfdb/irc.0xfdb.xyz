@@ -1,6 +1,6 @@
 #!/bin/bash
 #written by f0ur0ne
-script_version="0.6.12"
+script_version="0.6.13"
 base_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 unrealbinary_dir="$base_dir/unrealircd"
 
@@ -540,7 +540,7 @@ function start_unreal {
 		if [ "$norestart" == "y" ]; then
 			echo "Option --norestart passed, will rehash instead..."
 			echo "Rehashing UnrealIRCd with ./unrealircd rehash"
-			$unrealbinary_dir/unrealircd restart
+			$unrealbinary_dir/unrealircd rehash
 		else
 			echo "Retarting UnrealIRCd with ./unrealircd restart..."
 			$unrealbinary_dir/unrealircd restart
