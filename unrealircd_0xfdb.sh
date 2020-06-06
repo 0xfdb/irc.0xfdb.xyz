@@ -1,16 +1,15 @@
 #!/bin/bash
 #written by f0ur0ne
-script_version="0.6.9"
+script_version="0.6.11"
 base_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-source_dir=$(ls $base_dir | grep unrealircd- | sed '/gz$/d')
-unrealsource_dir="$base_dir/$source_dir"
 unrealbinary_dir="$base_dir/unrealircd"
-BASEPATH=$unrealbinary_dir
 
 function prepareircdsource {
 	echo "Downloading latest version of UnrealIRCd..."
 	base_gzip=$(wget --trust-server-names https://www.unrealircd.org/downloads/unrealircd-latest.tar.gz 2>&1 | grep "Saving to" | cut -c 12- | tr -d "‘’")
-	tar xzvf $base_gzip
+	tar xzvf "$base_gzip" -C "$base_dir"
+	source_dir=$(ls $base_dir | grep unrealircd- | sed '/gz$/d')
+	unrealsource_dir="$base_dir/$source_dir"
 	rm "$base_dir/$base_gzip"
 }
 
@@ -91,10 +90,10 @@ function build_unreal {
 	echo "Starting UnrealIRCd config..."
 	if [ "$script_interactive" == "y" ]; then
 		echo "Going interactive..."
-		$unrealsource_dir/Config
+		source Config
 	else
 		echo "Running with minimal questions..."
-		$unrealsource_dir/Config -nointro -quick
+		source Config -nointro
 	fi
 	echo "Config done, lets compile and install..."
 	make
@@ -599,12 +598,15 @@ function main {
 	else
 		echo "Option --nobuild given, skipping download check..."
 	fi
+	if [ -z "$nosudo" ]; then
+		check_deps
+	else
+		echo "Option --nosudo given, skipping dependency check..."
+	fi
 	cd $unrealsource_dir
-		if [ -z "$nosudo" ]; then
-			check_deps
-		else
-			echo "Option --nosudo given, skipping dependency check..."
-		fi
+	if [ "$file_given" == "y" ]; then
+		source "$file_path"
+	fi
 		if [ -z "$nobuild" ]; then
 			patch_fakelag
 			build_unreal
@@ -615,21 +617,15 @@ function main {
 		if [ "$new_configfile" == "y" ]; then
 			echo "Option -n passed, creating fresh config file..."
 			freshconf
-				if [ "$file_given" == "y" ]; then
-					source "$file_path"
-				fi
 				if [ "$script_interactive" == "y" ]; then
-						if [ "$file_given" == "y" ]; then #wtf am i doing
-							printconf_info
-						fi
-						get_confinfo
+					get_confinfo
 				fi
 			printconf_info #wtf am i doing
 			writeconf_patch
 		else
 			echo "Keeping old conf..."
 			if [ "$file_given" == "y" ]; then
-				echo "Unneeded option --newconf was passed... ignored."
+				echo "Unneeded option --file was passed... ignored."
 			fi
 		fi
 		start_unreal & end_msg
@@ -692,4 +688,3 @@ info
 echo "Oops... wtf did u do?"
 echo "Refer to --help for info on usage."
 exit
-
