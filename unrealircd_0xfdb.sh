@@ -1,6 +1,6 @@
 #!/bin/bash
 #written by f0ur0ne
-script_version="0.5"
+script_version="0.6"
 base_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 function prepareircdsource {
@@ -33,41 +33,50 @@ function patch_fakelag {
 }
 
 function check_deps {
+	sudo_true=$(which sudo)
+	patch_true=$(which patch)
 	libssl_true=$(ldconfig -p | grep libssl3)
-	c-ares_true=$(ldconfig -p | grep libcares)
+	cares_true=$(ldconfig -p | grep libcares)
 	nsl_true=$(ldconfig -p | grep libnsl)
 	pcre2_true=$(ldconfig -p | grep pcre2)
 	distro=$(cat /etc/*-release | head -n1)
-	if [ -z $libssl_true ] || [ -z $c-ares_true ] || [ -z $nsl_true ]; then
+	if [ -z "$libssl_true" ] || [ -z "$cares_true" ] || [ -z "$nsl_true" ] || [ -z "$patch_true" ] ; then
 		echo "You are missing a build dependency..."
-		echo "Checking distro..."
-		if [ "$distro" = 'NAME="void"' ]; then
-			echo "Void Linux - Checking with xbps"
-			echo "Ensuring base-devel and LibreSSL dev packages are installed..."
-			sudo xbps-install -S base-devel libressl-devel
-		fi
-		if [ "$distro" = 'NAME="Arch Linux"' ]; then
-			echo "Arch Linux - Checking with pacman"
-			echo "Ensuring base-devel meta and OpenSSL packages are installed..."
-			sudo pacman -S base-devel openssl
-		fi
-		if [ "$distro" = 'NAME="Linux Mint"' ] || [ "$distro" = 'PRETTY_NAME="Debian GNU/Linux 10 (*)"' ]; then
-			echo "Debian based Linux - Checking with apt"
-			echo "Ensuring build-essential and OpenSSL packages are installed..."
-			sudo apt install build-essential openssl
-		fi
-		if [ "$distro" = 'NAME="void"' ] || [ "$distro" = 'NAME="Arch Linux"' ] || [ "$distro" = 'NAME="Linux Mint"' ] || [ "$distro" = 'PRETTY_NAME="Debian GNU/Linux 10 (*)"' ]; then
-			echo "You are running an unsupported distro for the automatic installation of build dependencies..."
-			echo "Make sure you have the following packages installed:"
-			echo " OpenSSL or LibreSSL development package"
-			echo " c-ares"
-			echo " nsl"
-			echo " pcre2"
-			echo ""
-			echo "Manually verify all required dependencies are met then type build and hit enter..."
-			read manually_checked
-			if [ "$manually_checked" = "build" ]; then
-				echo "Manually verified dependencies, Proceeding..."
+		if [ -z "$sudo_true" ] ; then
+			echo "You need sudo for this script to install dependencies for you, please install sudo"
+			echo "or run with the --nosudo option to completely bypass checking dependencies."
+			echo "exiting."
+			exit
+		else
+			echo "Checking distro..."
+			if [ "$distro" = 'NAME="void"' ]; then
+				echo "Void Linux - Checking with xbps"
+				echo "Ensuring base-devel and LibreSSL dev packages are installed..."
+				sudo xbps-install -S base-devel libressl-devel
+			fi
+			if [ "$distro" = 'NAME="Arch Linux"' ]; then
+				echo "Arch Linux - Checking with pacman"
+				echo "Ensuring base-devel meta and OpenSSL packages are installed..."
+				sudo pacman -S base-devel openssl
+			fi
+			if [ "$distro" = 'NAME="Linux Mint"' ] || [[ "$distro" = 'PRETTY_NAME="Debian'* ]]; then
+				echo "Debian based Linux - Checking with apt"
+				echo "Ensuring build-essential and OpenSSL packages are installed..."
+				sudo apt install build-essential openssl
+			fi
+			if [ "$distro" = 'NAME="void"' ] && [ "$distro" = 'NAME="Arch Linux"' ] && [ "$distro" = 'NAME="Linux Mint"' ] && [ "$distro" = 'PRETTY_NAME="Debian'* ]; then
+				echo "You are running an unsupported distro for the automatic installation of build dependencies..."
+				echo "Make sure you have the following packages installed:"
+				echo " OpenSSL or LibreSSL development package"
+				echo " c-ares"
+				echo " nsl"
+				echo " pcre2"
+				echo ""
+				echo "Manually verify all required dependencies are met then type build and hit enter..."
+				read manually_checked
+				if [ "$manually_checked" = "build" ]; then
+					echo "Manually verified dependencies, Proceeding..."
+				fi
 			fi
 		fi
 	else
@@ -90,32 +99,68 @@ function freshconf {
 }
 
 function getconf_info {
-	echo ""
-	echo "We need some info to add to our config."
-	echo "What is your servers FQDN? (example: ircX.0xfdb.xyz)"
-	read XFDBSRVNAME
-	echo ""
-	echo "What should the server ID be? (Must be unique in network, example: 00x *numeric 3 digits*)"
-	read XFDBSRVID
-	echo ""
-	echo "What is your full name (for server info)?"
-	read XFDBOPFNAME
-	echo ""
-	echo "What is your nick name (for server info)?"
-	read XFDBOPNAME
-	echo ""
-	echo "What is your email address (for server info)?"
-	read XFDBOPEMAIL
-	echo ""
-	echo "What is the Nick that should be server OP?"
-	read XFDBOPNICK
-	echo ""
-	echo "What is the password that $XFDBOPNICK should use to become server OP?"
-	read XFDBOPPASSWD
-	echo ""
-	echo "When $XFDBOPNICK authenticates as server OP their vhost changes -"
-	echo "What would you like the vhost for $XFDBOPNICK to be after they /OPER? (example: $XFDBSRVNAME or just 0xfdb.xyz)"
-	read XFDBOPVHOST
+	if [ "$getconf_yn" = "n" ]; then
+			echo ""
+			echo "What is your servers FQDN? (previous: $XFDBSRVNAME)"
+			XFDBSRVNAME=""
+			read XFDBSRVNAME
+			echo ""
+			echo "What should the server ID be? (previous: $XFDBSRVID)"
+			XFDBSRVID=""
+			read XFDBSRVID
+			echo ""
+			echo "What is your full name? (previous: $XFDBOPFNAME)"
+			XFDBOPFNAME=""
+			read XFDBOPFNAME
+			echo ""
+			echo "What is your nick name? (previous: $XFDBOPNAME)"
+			XFDBOPNAME=""
+			read XFDBOPNAME
+			echo ""
+			echo "What is your email address (previous: $XFDBOPEMAIL)?"
+			XFDBOPEMAIL=""
+			read XFDBOPEMAIL
+			echo ""
+			echo "What is the Nick that should be server OP? (previous: $XFDBOPNICK)"
+			XFDBOPNICK=""
+			read XFDBOPNICK
+			echo ""
+			echo "What is the password that $XFDBOPNICK should use to become server OP? (previous: $XFDBOPPASSWD)"
+			XFDBOPPASSWD=""
+			read XFDBOPPASSWD
+			echo ""
+			echo "When $XFDBOPNICK authenticates as server OP their vhost changes -"
+			echo "What would you like the vhost for $XFDBOPNICK to be after they /OPER? (previous: $XFDBOPVHOST)"
+			XFDBOPVHOST=""
+			read XFDBOPVHOST
+	else
+		echo ""
+		echo "We need some info to add to our config."
+		echo "What is your servers FQDN? (example: ircX.0xfdb.xyz)"
+		read XFDBSRVNAME
+		echo ""
+		echo "What should the server ID be? (Must be unique in network, example: 00x *numeric 3 digits*)"
+		read XFDBSRVID
+		echo ""
+		echo "What is your full name (for server info)?"
+		read XFDBOPFNAME
+		echo ""
+		echo "What is your nick name (for server info)?"
+		read XFDBOPNAME
+		echo ""
+		echo "What is your email address (for server info)?"
+		read XFDBOPEMAIL
+		echo ""
+		echo "What is the Nick that should be server OP?"
+		read XFDBOPNICK
+		echo ""
+		echo "What is the password that $XFDBOPNICK should use to become server OP?"
+		read XFDBOPPASSWD
+		echo ""
+		echo "When $XFDBOPNICK authenticates as server OP their vhost changes -"
+		echo "What would you like the vhost for $XFDBOPNICK to be after they /OPER? (example: $XFDBSRVNAME or just 0xfdb.xyz)"
+		read XFDBOPVHOST
+	fi
 	echo ""
 	echo "OK!"
 	echo ""
@@ -133,10 +178,8 @@ function printconf_info {
 	echo ""
 	if [ "$script_interactive" == "y" ]; then
 		echo "Is all that right? (Y/n)"
+		getconf_yn=""
 		read getconf_yn
-		if [ "$getconf_yn " = "n" ] || [ "$getconf_yn " = "" ]; then
-			getconf_info
-		fi
 	fi
 }
 
@@ -528,20 +571,27 @@ function main {
 	fi
 	prepareircdsource
 	cd $unrealsource_dir
+		if [ -z "$nosudo" ]; then
+			check_deps
+		else
+			echo "Option --nosudo given, skipping dependency check..."
+		fi
 		patch_fakelag
-		check_deps
 		build_unreal
 	cd $unrealbinary_dir
 		if [ "$new_configfile" == "y" ]; then
 			echo "Option -n passed, creating fresh config file..."
 			freshconf
-				if [ "$script_interactive" == "y" ]; then
-					getconf_info
-				fi
 				if [ "$file_given" == "y" ]; then
 					source "$file_path"
 				fi
-			printconf_info
+				if [ "$script_interactive" == "y" ]; then
+						if [ "$file_given" == "y" ]; then
+							printconf_info
+						fi
+						get_confinfo
+				fi
+			printconf_info #wtf
 			writeconf_patch
 		else
 			echo "Keeping old conf..."
@@ -579,6 +629,9 @@ else
 		fi
 		if [ "$arg" == "--newconf" ] || [ "$arg" == "-n" ]; then
 			new_configfile="y"
+		fi
+		if [ "$arg" == "--nosudo" ]; then
+			nosudo="y"
 		fi
 		if [[ "$arg" == "--file="* ]] || [[ "$arg" == "-f="* ]]; then
 			file_name=$(echo "$arg" | sed s/"-f="// | sed s/"--file="//)
