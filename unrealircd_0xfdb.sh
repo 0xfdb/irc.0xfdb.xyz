@@ -1,6 +1,6 @@
 #!/bin/bash
 #written by f0ur0ne
-script_version="0.6.8"
+script_version="0.6.9"
 base_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source_dir=$(ls $base_dir | grep unrealircd- | sed '/gz$/d')
 unrealsource_dir="$base_dir/$source_dir"
@@ -532,7 +532,7 @@ function writeconf_patch {
 
 function start_unreal {
 	echo ""
-	unreal_running=$(ps aux | grep $unrealbinary_dir/bin/unrealircd | head -n1)
+	unreal_running=$(ps aux | grep $unrealbinary_dir/bin/unrealircd | head -n1 | grep -v "grep")
 	if [ -z "$unreal_running" ]; then
 		echo "Starting UnrealIRCd with ./unrealircd start"
 		$unrealbinary_dir/unrealircd start
@@ -692,3 +692,4 @@ info
 echo "Oops... wtf did u do?"
 echo "Refer to --help for info on usage."
 exit
+
