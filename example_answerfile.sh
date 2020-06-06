@@ -10,7 +10,7 @@ XFDBOPFNAME=""
 #Owner Nick:
 XFDBOPNAME=""
 #Owner Email:
-$XFDBOPEMAIL=""
+XFDBOPEMAIL=""
 #Server Op:
 XFDBOPNICK=""
 #Server Op password:
