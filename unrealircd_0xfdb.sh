@@ -1,9 +1,9 @@
 #!/bin/bash
-#version 0.3
 #written by f0ur0ne
+script_version="0.4"
+base_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 function prepareircdsource {
-	base_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 	echo "Downloading latest version of UnrealIRCd..."
 	base_gzip=$(wget --trust-server-names https://www.unrealircd.org/downloads/unrealircd-latest.tar.gz 2>&1 | grep "Saving to" | cut -c 12- | tr -d "‘’")
 	tar xzvf $base_gzip
@@ -90,7 +90,6 @@ function freshconf {
 }
 
 function getconf_info {
-	getconf_yn="y"
 	echo ""
 	echo "We need some info to add to our config."
 	echo "What is your servers FQDN? (example: ircX.0xfdb.xyz)"
@@ -120,7 +119,9 @@ function getconf_info {
 	echo ""
 	echo "OK!"
 	echo ""
-	echo "You just picked the following options:"
+}
+function printconf_info {
+	echo "The following options have been selected:"
 	echo " Server Name:	$XFDBSRVNAME"
 	echo " Server ID:	$XFDBSRVID"
 	echo " Owner Name:	$XFDBOPFNAME"
@@ -130,10 +131,12 @@ function getconf_info {
 	echo " S-Op passwd:	$XFDBOPPASSWD *this gets stored in clear text in your conf*"
 	echo " S-Op vhost:	$XFDBOPVHOST"
 	echo ""
-	echo "Is all that right? (Y/n)"
-	read getconf_yn
-	if [ "$getconf_yn " = "n" ]; then
-		getconf_info
+	if [ "$script_interactive" == "y" ]; then
+		echo "Is all that right? (Y/n)"
+		read getconf_yn
+		if [ "$getconf_yn " = "n" ] || [ "$getconf_yn " = "" ]; then
+			getconf_info
+		fi
 	fi
 }
 
@@ -493,17 +496,103 @@ function end_msg {
 	echo ""
 }
 
+function info {
+		echo "UnrealIRCd_0xfdb.sh version $script_version"
+		echo "Copyright (c) 2020 0xfdb Industries"
+		echo "Written by f0ur0ne"
+		echo ""
+}
+function usage {
+		echo "Build script / CI-ish system for creating new irc.0xfdb.xyz leaf servers"
+		echo "It also keeps our leaf servers IRCd, shared network settings, and shared build options up to date."
+		echo ""
+		echo " Usage: $ unrealircd_0xfdb.sh [option1] [option2] [...]"
+		echo " Options:"
+		echo "	-n --newconf	Creates a new config from template (Useful for new servers)"
+		echo "	-f --file=path/to/file		Path to answer file (Disables most interaction, file must be in current dir)"
+		echo "	-i --interactive			Forces interaction (This is how the script runs without options passed)"
+		echo "	-h --help				Displays this help message"
+		echo ""
+		echo "Send bug reports, questions, discussions to f0ur0ne on irc.0xfdb.xyz or via email at <admin@0xfdb.xyz>"
+		echo "and/or open issues at https://github.com/f0ur0ne/irc.0xfdb.xyz"
+}
+
 function main {
+	info
+	if [ "$script_interactive" == "y" ]; then
+		echo "Running Interactively..."
+		if [ "$new_configfile" == "" ]; then
+			echo "Do you want to generate a fresh config file? (Y/n)"
+			read new_configfile
+		fi
+	fi
 	prepareircdsource
 	cd $unrealsource_dir
 		patch_fakelag
 		check_deps
 		build_unreal
 	cd $unrealbinary_dir
-		freshconf
-		getconf_info
-		writeconf_patch
+		if [ "$new_configfile" == "y" ]; then
+			echo "Option -n passed, creating fresh config file..."
+			freshconf
+				if [ "$script_interactive" == "y" ]; then
+					getconf_info
+					printconf_info
+				else
+					source "$file_path"
+					printconf_info
+				fi
+			writeconf_patch
+		else
+			echo "Keeping old conf..."
+		fi
 		start_unreal & end_msg
+		exit
 }
 
-main
+#Parsing options and setting variables
+if [ "$1" == "" ]; then
+	info
+	echo "This script accepts options to automate most tasks, you can view them by running ./unrealircd_0xfdb.sh --help "
+	echo "Would you like to continue as interactive? (Y/n)"
+	read script_interactive
+	echo ""
+	if [ "$script_interactive" == "n" ]; then
+		echo "exiting."
+		exit
+	else
+		script_interactive="y"
+		main
+	fi
+else
+	for arg in "$@"; do
+		if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]; then
+			info
+			usage
+			exit
+		fi
+		if [ "$arg" == "--interactive" ] || [ "$arg" == "-i" ]; then
+			script_interactive="y"
+		fi
+		if [ "$arg" == "--newconf" ] || [ "$arg" == "-n" ]; then
+			new_configfile="y"
+		fi
+		if [[ "$arg" == "--file="* ]] || [[ "$arg" == "-f="* ]]; then
+			file_name=$(echo "$arg" | sed s/"-f="// | sed s/"--file="//)
+				if [ "$file_name" == "" ]; then
+					info
+					echo "There is something wrong with the path you sent for [--file,-f] or your option syntax."
+					echo "Refer to --help for info on usage."
+					exit
+				else
+					file_path="$base_dir/$file_name"
+				fi
+		fi
+	done
+	main
+fi
+
+info
+echo "Oops... wtf did u do?"
+echo "Refer to --help for info on usage."
+exit
