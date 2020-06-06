@@ -1,17 +1,17 @@
 #!/bin/bash
 #written by f0ur0ne
-script_version="0.6.2"
+script_version="0.6.3"
 base_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source_dir=$(ls $base_dir | grep unrealircd- | sed '/gz$/d')
+unrealsource_dir="$base_dir/$source_dir"
+unrealbinary_dir="$base_dir/unrealircd"
+BASEPATH=$unrealbinary_dir
 
 function prepareircdsource {
 	echo "Downloading latest version of UnrealIRCd..."
 	base_gzip=$(wget --trust-server-names https://www.unrealircd.org/downloads/unrealircd-latest.tar.gz 2>&1 | grep "Saving to" | cut -c 12- | tr -d "‘’")
 	tar xzvf $base_gzip
 	rm "$base_dir/$base_gzip"
-	source_dir=$(ls $base_dir | grep unrealircd- | sed '/gz$/d')
-	unrealsource_dir="$base_dir/$source_dir"
-	unrealbinary_dir="$base_dir/unrealircd"
-	BASEPATH=$unrealbinary_dir
 }
 
 function patch_fakelag {
@@ -555,6 +555,7 @@ function usage {
 		echo "	-f --file=path/to/file		Path to answer file (Disables most interaction, file must be in current dir)"
 		echo "	-i --interactive			Forces interaction (This is how the script runs without options passed)"
 		echo "	--nosudo				Skips all dependency checks"
+		echo "	--nobuild				Skips downloading/building UnrealIRCD"
 		echo "	--help -h				Displays this help message"
 		echo ""
 		echo "Send bug reports, questions, discussions to f0ur0ne on irc.0xfdb.xyz or via email at <admin@0xfdb.xyz>"
@@ -570,15 +571,23 @@ function main {
 			read new_configfile
 		fi
 	fi
-	prepareircdsource
+	if [ -z "$nobuild" ]; then
+		prepareircdsource
+	else
+		echo "Option --nobuild given, skipping download check..."
+	fi
 	cd $unrealsource_dir
 		if [ -z "$nosudo" ]; then
 			check_deps
 		else
 			echo "Option --nosudo given, skipping dependency check..."
 		fi
-		patch_fakelag
-		build_unreal
+		if [ -z "$nobuild" ]; then
+			patch_fakelag
+			build_unreal
+		else
+			echo "Option --nobuild given, skipping build..."
+		fi
 	cd $unrealbinary_dir
 		if [ "$new_configfile" == "y" ]; then
 			echo "Option -n passed, creating fresh config file..."
@@ -633,6 +642,9 @@ else
 		fi
 		if [ "$arg" == "--nosudo" ]; then
 			nosudo="y"
+		fi
+		if [ "$arg" == "--nobuild" ]; then
+			nobuild="y"
 		fi
 		if [[ "$arg" == "--file="* ]] || [[ "$arg" == "-f="* ]]; then
 			file_name=$(echo "$arg" | sed s/"-f="// | sed s/"--file="//)
