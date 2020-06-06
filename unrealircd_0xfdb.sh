@@ -1,6 +1,6 @@
 #!/bin/bash
 #written by f0ur0ne
-script_version="0.6"
+script_version="0.6.1"
 base_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 function prepareircdsource {
@@ -554,7 +554,8 @@ function usage {
 		echo "	-n --newconf	Creates a new config from template (Useful for new servers)"
 		echo "	-f --file=path/to/file		Path to answer file (Disables most interaction, file must be in current dir)"
 		echo "	-i --interactive			Forces interaction (This is how the script runs without options passed)"
-		echo "	-h --help				Displays this help message"
+		echo "	--nosudo				Skips all dependency checks"
+		echo "	--help -h				Displays this help message"
 		echo ""
 		echo "Send bug reports, questions, discussions to f0ur0ne on irc.0xfdb.xyz or via email at <admin@0xfdb.xyz>"
 		echo "and/or open issues at https://github.com/f0ur0ne/irc.0xfdb.xyz"
