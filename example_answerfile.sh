@@ -1,4 +1,4 @@
-#1/bin/bash
+#!/bin/bash
 #Answer file for unrealircd_0xfdb.sh
 
 #Server Name:
