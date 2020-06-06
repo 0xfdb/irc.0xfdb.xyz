@@ -1,6 +1,6 @@
 #!/bin/bash
 #written by f0ur0ne
-script_version="0.6.7"
+script_version="0.6.8"
 base_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source_dir=$(ls $base_dir | grep unrealircd- | sed '/gz$/d')
 unrealsource_dir="$base_dir/$source_dir"
@@ -64,7 +64,7 @@ function check_deps {
 				echo "Ensuring build-essential and OpenSSL packages are installed..."
 				sudo apt install build-essential openssl
 			fi
-			if [ "$distro" = 'NAME="void"' ] && [ "$distro" = 'NAME="Arch Linux"' ] && [ "$distro" = 'NAME="Linux Mint"' ] && [ "$distro" = 'PRETTY_NAME="Debian'* ]; then
+			if [ "$distro" != 'NAME="void"' ] && [ "$distro" != 'NAME="Arch Linux"' ] && [ "$distro" != 'NAME="Linux Mint"' ] && [ "$distro" != 'PRETTY_NAME="Debian'* ]; then
 				echo "You are running an unsupported distro for the automatic installation of build dependencies..."
 				echo "Make sure you have the following packages installed:"
 				echo " OpenSSL or LibreSSL development package"
@@ -76,6 +76,9 @@ function check_deps {
 				read manually_checked
 				if [ "$manually_checked" = "build" ]; then
 					echo "Manually verified dependencies, Proceeding..."
+				else
+					echo "exiting."
+					exit
 				fi
 			fi
 		fi
