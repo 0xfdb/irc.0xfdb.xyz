@@ -44,3 +44,40 @@ GENCERTIFICATE="1"
 EXTRAPARA=""
 ADVANCED=""
 ' >$unrealsource_dir/config.settings
+
+#UnrealIRCd SSL certificate creation options
+orgname=$(echo $XFDBSRVNAME | sed s/".0xfdb.xyz"//)
+echo '# create RSA certs - Server
+
+[ req ]
+# Note: RSA bits is ignored, as we use ECC now
+default_bits = 2048
+distinguished_name = req_dn
+x509_extensions = cert_type
+
+[ req_dn ]
+countryName = Country Name
+countryName_default             = US
+countryName_min                 = 2
+countryName_max                 = 2
+
+stateOrProvinceName             = State/Province
+stateOrProvinceName_default     = Michigan
+stateOrProvinceName_value       = Michigan
+
+localityName                    = Locality Name (eg, city)
+localityName_value              = Detroit
+
+0.organizationName              = Organization Name (eg, company)
+0.organizationName_default      = '$orgname'
+0.organizationName_value        = '$orgname'
+
+organizationalUnitName          = Organizational Unit Name (eg, section)
+organizationalUnitName_default  = 0xfdb.xyz
+organizationalUnitName_value    = 0xfdb.xyz
+
+0.commonName                    = Common Name (Full domain of your server)
+0.commonName_value              = irc.0xfdb.xyz
+
+[ cert_type ]
+nsCertType = server'>$unrealsource_dir/extras/tls.cnf
