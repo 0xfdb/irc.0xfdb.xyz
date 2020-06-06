@@ -2,21 +2,28 @@
 #Answer file for unrealircd_0xfdb.sh
 
 #Server Name:
-XFDBSRVNAME=""
+XFDBSRVNAME=""  #This is the FQDN of this leaf, for example spider.0xfdb.xyz
+
 #Server ID:
-XFDBSRVID=""
+XFDBSRVID=""  #Every server in the same network must have a unique numerical identifier, like 420 for instance
+
 #Owner Name:
-XFDBOPFNAME=""
+XFDBOPFNAME=""  #For shit
+
 #Owner Nick:
-XFDBOPNAME=""
+XFDBOPNAME=""  #For shit
+
 #Owner Email:
-XFDBOPEMAIL=""
+XFDBOPEMAIL=""  #For shit
+
 #Server Op:
-XFDBOPNICK=""
+XFDBOPNICK=""  #This is important, You need to put the server op's nick here
+
 #Server Op password:
-XFDBOPPASSWD=""
-#Server Op vhost:
-XFDBOPVHOST=""
+XFDBOPPASSWD="" #Server op password goes here
+
+#Server Op virtual host:
+XFDBOPVHOST=""  #server op's vhost, like nick@__ "underlined part" goes here. When they /OPER their vhost will change to this
 
 #UnrealIRCd config options:
 echo '#
@@ -46,7 +53,7 @@ ADVANCED=""
 ' >$unrealsource_dir/config.settings
 
 #UnrealIRCd SSL certificate creation options
-orgname=$(echo $XFDBSRVNAME | sed s/".0xfdb.xyz"//)
+orgname=$(echo $XFDBSRVNAME | sed s/".0xfdb.xyz"//) #grabs the "fully qualitied" Server Name from top of this file and removes our domain portion
 echo '# create RSA certs - Server
 
 [ req ]
