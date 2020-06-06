@@ -1,6 +1,6 @@
 #!/bin/bash
 #written by f0ur0ne
-script_version="0.6.3"
+script_version="0.6.5"
 base_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source_dir=$(ls $base_dir | grep unrealircd- | sed '/gz$/d')
 unrealsource_dir="$base_dir/$source_dir"
@@ -523,8 +523,21 @@ function writeconf_patch {
 
 function start_unreal {
 	echo ""
-	echo "Starting unrealircd with ./unrealircd start"
-	$unrealbinary_dir/unrealircd start
+	unreal_running=$(ps aux | grep $unrealbinary_dir/bin/unrealircd | head -n1)
+	if [ -z "$unreal_running" ]; then
+		echo "Starting UnrealIRCd with ./unrealircd start"
+		$unrealbinary_dir/unrealircd start
+	else
+		echo "UnrealiIRCd is currently running..."
+		if [ "$norestart" == "y" ]; then
+			echo "Option --norestart passed, will rehash instead..."
+			echo "Rehashing UnrealIRCd with ./unrealircd rehash"
+			$unrealbinary_dir/unrealircd restart
+		else
+			echo "Retarting UnrealIRCd with ./unrealircd restart..."
+			$unrealbinary_dir/unrealircd restart
+		fi
+	fi
 	echo ""
 }
 
@@ -556,6 +569,7 @@ function usage {
 		echo "	-i --interactive			Forces interaction (This is how the script runs without options passed)"
 		echo "	--nosudo				Skips all dependency checks"
 		echo "	--nobuild				Skips downloading/building UnrealIRCD"
+		echo "	--norestart				If UnrealIRCD is running then rehash it, instead of the default behavior (restart)"
 		echo "	--help -h				Displays this help message"
 		echo ""
 		echo "Send bug reports, questions, discussions to f0ur0ne on irc.0xfdb.xyz or via email at <admin@0xfdb.xyz>"
@@ -596,12 +610,12 @@ function main {
 					source "$file_path"
 				fi
 				if [ "$script_interactive" == "y" ]; then
-						if [ "$file_given" == "y" ]; then
+						if [ "$file_given" == "y" ]; then #wtf am i doing
 							printconf_info
 						fi
 						get_confinfo
 				fi
-			printconf_info #wtf
+			printconf_info #wtf am i doing
 			writeconf_patch
 		else
 			echo "Keeping old conf..."
@@ -645,6 +659,9 @@ else
 		fi
 		if [ "$arg" == "--nobuild" ]; then
 			nobuild="y"
+		fi
+		if [ "$arg" == "--norestart" ]; then
+			norestart="y"
 		fi
 		if [[ "$arg" == "--file="* ]] || [[ "$arg" == "-f="* ]]; then
 			file_name=$(echo "$arg" | sed s/"-f="// | sed s/"--file="//)
