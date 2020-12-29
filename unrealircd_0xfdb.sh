@@ -10,7 +10,7 @@ function prepareircdsource {
 	tar xzvf "$base_gzip" -C "$base_dir"
 	source_dir=$(ls $base_dir | grep unrealircd- | sed '/gz$/d')
 	unrealsource_dir="$base_dir/$source_dir"
-        chmod +x "$unrealsource_dir/configure"
+	chmod +x "$unrealsource_dir/configure"
 	rm "$base_dir/$base_gzip"
 }
 
@@ -62,7 +62,7 @@ function check_deps {
 			if [ "$distro" = 'NAME="Linux Mint"' ] || [[ "$distro" = 'PRETTY_NAME="Debian'* ]]; then
 				echo "Debian based Linux - Checking with apt"
 				echo "Ensuring build-essential and OpenSSL packages are installed..."
-				sudo apt install build-essential openssl
+				sudo apt install build-essential openssl libressl-dev
 			fi
 			if [ "$distro" != 'NAME="void"' ] && [ "$distro" != 'NAME="Arch Linux"' ] && [ "$distro" != 'NAME="Linux Mint"' ] && [ "$distro" != 'PRETTY_NAME="Debian'* ]; then
 				echo "You are running an unsupported distro for the automatic installation of build dependencies..."
