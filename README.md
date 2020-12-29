@@ -21,7 +21,7 @@ $ sudo apt install git base-devel openssl libressl-dev
 $ sudo useradd -m irc
 $ su irc
 $ cd ~
-$ git clone https://github.com/f0ur0ne/irc.0xfdb.xyz.git
+$ git clone https://github.com/0xfdb/irc.0xfdb.xyz.git
 $ cd irc.0xfdb.xyz
 ```
 copy `example_answerfile.sh` to `answerfile.sh` and fill in the blanks - then:
