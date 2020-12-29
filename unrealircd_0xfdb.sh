@@ -10,6 +10,7 @@ function prepareircdsource {
 	tar xzvf "$base_gzip" -C "$base_dir"
 	source_dir=$(ls $base_dir | grep unrealircd- | sed '/gz$/d')
 	unrealsource_dir="$base_dir/$source_dir"
+        chmod +x "$unrealsource_dir/configure"
 	rm "$base_dir/$base_gzip"
 }
 
